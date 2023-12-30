@@ -2,6 +2,7 @@
 
 namespace Metran;
 
+
 public sealed class MetranTransaction<T> : IDisposable
 {
   private readonly T _id;

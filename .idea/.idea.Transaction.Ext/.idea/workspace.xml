@@ -8,20 +8,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1fc286c6-6e3e-4004-9ba0-46e25af02fdd" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Metran/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Metran/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Metran/.idea/indexLayout.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Metran/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.Transaction.Ext/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Metran.sln" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran.Samples/Metran.Samples.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran.Samples/Program.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran.Samples/TestApp.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran/GlobalMetranContainer.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran/Metran.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran/MetranContainer.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Metran/MetranTransaction.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Transaction.Ext/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Transaction.Ext/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Metran/MetranContainer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Metran/MetranContainer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Metran/MetranTransaction.cs" beforeDir="false" afterPath="$PROJECT_DIR$/src/Metran/MetranTransaction.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +23,7 @@
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/1af51483c9bf18871cce649b9f966dd7be686536f998c33bba3c5fc4adea4a0/Task.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo"><![CDATA[{
   "associatedIndex": 3
 }]]></component>
@@ -49,6 +39,7 @@
   "keyToString": {
     ".NET Project.Metran.Samples.executor": "Debug",
     "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Publish to folder.Publish Metran to folder.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
@@ -68,7 +59,11 @@
     ]
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Publish to folder.Publish Metran to folder">
+    <configuration name="Publish Metran to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
+      <riderPublish configuration="Release" delete_existing_files="true" platform="Any CPU" runtime="Portable" target_folder="$PROJECT_DIR$/src/Metran/bin/Release/net6.0/publish" target_framework="net6.0" uuid_high="-5384507141371245715" uuid_low="-6123945560127860232" />
+      <method v="2" />
+    </configuration>
     <configuration name="Metran.Samples" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
       <option name="PROGRAM_PARAMETERS" value="" />
@@ -96,15 +91,27 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1703816746015</updated>
-      <workItem from="1703816747061" duration="2480000" />
+      <workItem from="1703816747061" duration="5278000" />
     </task>
+    <task id="LOCAL-00001" summary="init">
+      <option name="closed" value="true" />
+      <created>1703819717971</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1703819717971</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="init" />
+    <option name="LAST_COMMIT_MESSAGE" value="init" />
   </component>
 </project>

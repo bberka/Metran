@@ -4,6 +4,12 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>1.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>Metran</Title>
+    <Description>https://github.com/bberka/Metran</Description>
+    <PackageProjectUrl>https://github.com/bberka/Metran</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/bberka/Metran</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
