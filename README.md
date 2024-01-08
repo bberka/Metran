@@ -19,7 +19,7 @@ Let's say you are going to do some financial database actions and you want user 
 And if method is in processing you don't want second instance of the method running.
 Completely avoiding any overlap in db or any other business logic. 
 
-Remember this does NOT remove the need to use database transactions. It simply provides a locker with an id (in most cases user id or something else9
+Remember this does NOT remove the need to use database transactions. It simply provides a locker with an id (in most cases user id or something else)
 
 ## How to use ? 
 You can check the example project
