@@ -24,12 +24,56 @@ public sealed class MetranContainer<T> where T : notnull
              : metran;
   }
 
-  public MetranTransaction<T>? BeginTransactionWithRetry(T transactionIdentity,
-                                                         byte maxRetryCount,
-                                                         int retryDelayMs) {
+  /// <summary>
+  ///  Returns null if there is a transaction with the same identity
+  /// </summary>
+  /// <param name="transactionIdentityList"></param>
+  /// <returns></returns>
+  public MetranTransactionList<T>? BeginTransaction(List<T> transactionIdentityList) {
+    var addedList = new List<MetranTransaction<T>>();
+    foreach (var id in transactionIdentityList) {
+      var tran = BeginTransaction(id);
+      if (tran == null) {
+        break;
+      }
+
+      addedList.Add(tran);
+    }
+
+    if (addedList.Count == transactionIdentityList.Count)
+      return new MetranTransactionList<T>(addedList, ref _bag);
+    foreach (var tran in addedList) {
+      tran.Dispose();
+    }
+
+    return null;
+  }
+
+  public MetranTransaction<T>? BeginTransaction(T transactionIdentity,
+                                                byte maxRetryCount,
+                                                int retryDelayMs) {
     var retryCount = 0;
     while (true) {
       var t = BeginTransaction(transactionIdentity);
+      if (t != null) {
+        return t;
+      }
+
+      if (retryCount >= maxRetryCount) {
+        return null;
+      }
+
+      retryCount++;
+      Thread.Sleep(retryDelayMs);
+    }
+  }
+
+  public MetranTransactionList<T>? BeginTransaction(List<T> transactionIdentityList,
+                                                    byte maxRetryCount,
+                                                    int retryDelayMs) {
+    var retryCount = 0;
+    while (true) {
+      var t = BeginTransaction(transactionIdentityList);
       if (t != null) {
         return t;
       }

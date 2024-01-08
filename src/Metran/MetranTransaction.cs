@@ -3,7 +3,7 @@
 namespace Metran;
 
 
-public sealed class MetranTransaction<T> : IDisposable
+public sealed class MetranTransaction<T> : IDisposable where T : notnull
 {
   private readonly T _id;
   private readonly ConcurrentDictionary<T, MetranTransaction<T>> _bag;
@@ -18,11 +18,8 @@ public sealed class MetranTransaction<T> : IDisposable
 
   public void Dispose() {
     if (_disposed) return;
-    EndTransaction();
+    _bag.TryRemove(_id, out var _);
     _disposed = true;
   }
 
-  public bool EndTransaction() {
-    return _bag.TryRemove(_id, out var _);
-  }
 }
