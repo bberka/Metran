@@ -1,25 +1,25 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 
-namespace Metran;
-
-
-public sealed class MetranTransaction<T> : IDisposable where T : notnull
+namespace Metran
 {
-  private readonly T _id;
-  private readonly ConcurrentDictionary<T, MetranTransaction<T>> _bag;
+  public sealed class MetranTransaction<T> : IDisposable
+  {
+    private readonly ConcurrentDictionary<T, MetranTransaction<T>> _bag;
+    private readonly T _id;
 
-  internal MetranTransaction(T id,
-                             ref ConcurrentDictionary<T, MetranTransaction<T>> bag) {
-    _id = id;
-    _bag = bag;
+    private bool _disposed;
+
+    internal MetranTransaction(T id,
+                               ref ConcurrentDictionary<T, MetranTransaction<T>> bag) {
+      _id = id;
+      _bag = bag;
+    }
+
+    public void Dispose() {
+      if (_disposed) return;
+      _bag.TryRemove(_id, out var _);
+      _disposed = true;
+    }
   }
-
-  private bool _disposed;
-
-  public void Dispose() {
-    if (_disposed) return;
-    _bag.TryRemove(_id, out var _);
-    _disposed = true;
-  }
-
 }
