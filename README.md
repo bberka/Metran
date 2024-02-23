@@ -38,4 +38,45 @@ cases user id or something else)
 
 You can check the example project
 
-WIP...
+Define MetranContainer
+```csharp
+public static readonly MetranContainer<long> Container = new();
+```
+
+Use it in your method
+```csharp
+
+public void DoSomething(long userId)
+{
+  //accepts long or HashSet<long>
+  using var metran = Container.BeginTransaction(userId); 
+
+  //Only returns null if transaction already exists
+  if (metran == null) {
+    //Must check for null or throw with ArgumentNullException
+    //Console.WriteLine($"[{userId}]Transaction already exists");
+    return;
+  }
+    
+  //Do your stuff here
+}
+```
+
+Usage with HashSet
+```csharp
+public void DoSomething(List<long> userIds)
+{
+  //accepts long or HashSet<long>
+  using var metran = Container.BeginTransaction(userIds.ToHashSet()); 
+
+  //Only returns null if any transaction with same id already exists
+  //All ids provided must be free to use for transaction to be created
+  if (metran == null) {
+    //Must check for null or throw with ArgumentNullException
+    //Console.WriteLine($"[{userId}]Transaction already exists");
+    return;
+  }
+    
+  //Do your stuff here
+}
+```
