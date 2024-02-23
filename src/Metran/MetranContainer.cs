@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Metran
@@ -30,12 +31,11 @@ namespace Metran
     /// </summary>
     /// <param name="transactionIdentityList"></param>
     /// <returns></returns>
-    public MetranTransactionList<T> BeginTransaction(List<T> transactionIdentityList) {
+    public MetranTransactionList<T> BeginTransaction(HashSet<T> transactionIdentityList) {
       var addedList = new List<MetranTransaction<T>>();
       foreach (var id in transactionIdentityList) {
         var tran = BeginTransaction(id);
         if (tran == null) break;
-
         addedList.Add(tran);
       }
 
@@ -61,7 +61,7 @@ namespace Metran
       }
     }
 
-    public MetranTransactionList<T> BeginTransaction(List<T> transactionIdentityList,
+    public MetranTransactionList<T> BeginTransaction(HashSet<T> transactionIdentityList,
                                                      byte maxRetryCount,
                                                      int retryDelayMs) {
       var retryCount = 0;
