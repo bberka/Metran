@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Version>1.0</Version>
+    <Version>2.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>Metran</Title>
     <PackageProjectUrl>https://github.com/bberka/Metran</PackageProjectUrl>
@@ -12,7 +11,8 @@
     <Authors>bberka</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <LangVersion>7</LangVersion>
+    <LangVersion>8</LangVersion>
+    <TargetFrameworks>net5.0;net5.0-windows;net6.0;net6.0-windows;net7.0;net7.0-windows;net8.0;net8.0-windows;net9.0;netstandard2.1;net481</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\LICENSE">
@@ -24,7 +24,7 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Content Include="..\..\LICENSE">
       <Link>LICENSE</Link>

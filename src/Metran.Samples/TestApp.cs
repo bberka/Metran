@@ -11,7 +11,7 @@ public static class TestApp
       new Random().Next(1, 10)
     };
     Thread.Sleep( new Random().Next(100, 500)); 
-    using var metran = TestMetranContainer.Container.BeginTransaction(idList.ToHashSet());
+    using var metran = TestMetranContainer.Container.ForceAddTransactionList(idList.ToHashSet());
 
     if (metran == null) {
       // Console.WriteLine($"[{guid}]Transaction already exists");

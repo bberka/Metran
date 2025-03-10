@@ -18,7 +18,7 @@ namespace Metran
 
     public void Dispose() {
       if (_disposed) return;
-      _bag.TryRemove(_id, out var _);
+      _bag.TryRemove(_id, out _);
       _disposed = true;
     }
   }

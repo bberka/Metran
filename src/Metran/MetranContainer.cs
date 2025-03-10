@@ -1,7 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 namespace Metran
 {
@@ -13,69 +12,87 @@ namespace Metran
   {
     private ConcurrentDictionary<T, MetranTransaction<T>> _bag = new ConcurrentDictionary<T, MetranTransaction<T>>();
 
-    /// <summary>
-    ///   Returns null if there is a transaction with the same identity
-    /// </summary>
-    /// <param name="transactionIdentity"></param>
-    /// <returns></returns>
-    public MetranTransaction<T> BeginTransaction(T transactionIdentity) {
-      var metran = new MetranTransaction<T>(transactionIdentity, ref _bag);
-      var added = _bag.TryAdd(transactionIdentity, metran);
-      return !added
-               ? null
-               : metran;
+    public MetranTransaction<T> this[T key] => _bag[key];
+
+    public MetranTransaction<T> ForceAddTransaction(T transactionIdentity) {
+      var tran = new MetranTransaction<T>(transactionIdentity, ref _bag);
+      _bag[transactionIdentity] = tran;
+      return tran;
     }
 
-    /// <summary>
-    ///   Returns null if there is a transaction with the same identity
-    /// </summary>
-    /// <param name="transactionIdentityList"></param>
-    /// <returns></returns>
-    public MetranTransactionList<T> BeginTransaction(HashSet<T> transactionIdentityList) {
+    public MetranTransaction<T> ThrowOrAddTransaction(T transactionIdentity) {
+      if (_bag.ContainsKey(transactionIdentity)) {
+        throw new Exception("Transaction already exists: " + transactionIdentity);
+      }
+
+      var tran = new MetranTransaction<T>(transactionIdentity, ref _bag);
+      _bag[transactionIdentity] = tran;
+      return tran;
+    }
+
+    public MetranTransaction<T> GetOrAddTransaction(T transactionIdentity) {
+      if (_bag.TryGetValue(transactionIdentity, out var transaction)) {
+        return transaction;
+      }
+
+      var tran = new MetranTransaction<T>(transactionIdentity, ref _bag);
+      _bag[transactionIdentity] = tran;
+      return tran;
+    }
+
+
+    public bool TryAddTransaction(T transactionIdentity, out MetranTransaction<T> transaction) {
+      transaction = null;
+      if (_bag.ContainsKey(transactionIdentity)) {
+        return false;
+      }
+
+      transaction = new MetranTransaction<T>(transactionIdentity, ref _bag);
+      _bag[transactionIdentity] = transaction;
+      return true;
+    }
+
+    public bool TryAddTransactionList(HashSet<T> transactionIdentityList, out MetranTransactionList<T> transactionList) {
+      transactionList = null;
       var addedList = new List<MetranTransaction<T>>();
       foreach (var id in transactionIdentityList) {
-        var tran = BeginTransaction(id);
-        if (tran == null) break;
-        addedList.Add(tran);
+        var added = TryAddTransaction(id, out var transaction);
+        if (added) {
+          addedList.Add(transaction);
+        }
+        else {
+          break;
+        }
       }
 
-      if (addedList.Count == transactionIdentityList.Count)
-        return new MetranTransactionList<T>(addedList, ref _bag);
-      foreach (var tran in addedList) tran.Dispose();
-
-      return null;
-    }
-
-    public MetranTransaction<T> BeginTransaction(T transactionIdentity,
-                                                 byte maxRetryCount,
-                                                 int retryDelayMs) {
-      var retryCount = 0;
-      while (true) {
-        var t = BeginTransaction(transactionIdentity);
-        if (t != null) return t;
-
-        if (retryCount >= maxRetryCount) return null;
-
-        retryCount++;
-        Thread.Sleep(retryDelayMs);
+      if (addedList.Count != transactionIdentityList.Count) {
+        foreach (var tran in addedList) tran.Dispose();
+        return false;
       }
+
+      transactionList = new MetranTransactionList<T>(addedList, ref _bag);
+      return true;
     }
 
-    public MetranTransactionList<T> BeginTransaction(HashSet<T> transactionIdentityList,
-                                                     byte maxRetryCount,
-                                                     int retryDelayMs) {
-      var retryCount = 0;
-      while (true) {
-        var t = BeginTransaction(transactionIdentityList);
-        if (t != null) return t;
-
-        if (retryCount >= maxRetryCount) return null;
-
-        retryCount++;
-        Thread.Sleep(retryDelayMs);
+    public MetranTransactionList<T> ForceAddTransactionList(HashSet<T> transactionIdentityList) {
+      var addedList = new List<MetranTransaction<T>>();
+      foreach (var id in transactionIdentityList) {
+        var added = TryAddTransaction(id, out var transaction);
+        if (added) {
+          addedList.Add(transaction);
+        }
+        else {
+          break;
+        }
       }
-    }
 
+      if (addedList.Count != transactionIdentityList.Count) {
+        foreach (var tran in addedList) tran.Dispose();
+        throw new Exception("Transaction already exists: " + string.Join(", ", transactionIdentityList));
+      }
+
+      return new MetranTransactionList<T>(addedList, ref _bag);
+    }
 
     public bool HasTransaction(T transactionIdentity) {
       lock (_bag) {
@@ -83,8 +100,12 @@ namespace Metran
       }
     }
 
-    public bool EndTransaction(T transactionIdentity) {
-      return _bag.TryRemove(transactionIdentity, out _);
+    public bool RemoveTransaction(T transactionIdentity) {
+      if (_bag.TryRemove(transactionIdentity, out var val)) {
+        val.Dispose();
+      }
+
+      return false;
     }
   }
 }
