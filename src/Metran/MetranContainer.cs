@@ -95,9 +95,7 @@ namespace Metran
     }
 
     public bool HasTransaction(T transactionIdentity) {
-      lock (_bag) {
-        return _bag.ContainsKey(transactionIdentity);
-      }
+      return _bag.ContainsKey(transactionIdentity);
     }
 
     public bool RemoveTransaction(T transactionIdentity) {
