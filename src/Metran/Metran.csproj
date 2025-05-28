@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Version>2.1</Version>
+    <Version>3.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>Metran</Title>
     <PackageProjectUrl>https://github.com/bberka/Metran</PackageProjectUrl>
