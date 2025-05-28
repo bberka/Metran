@@ -1,12 +1,8 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using Metran.Samples;
 
-using Metran.Samples;
+var tasks = Enumerable.Range(0,100) 
+    .Select(_ => TestApp.RunAsync())
+    .ToArray();
 
-var action = new Action(TestApp.Run);
-var tasks = new List<Task>();
-for (var i = 0; i < 100; i++) {
-  tasks.Add(Task.Run(action));
-}
- 
-Task.WaitAll(tasks.ToArray());
+Task.WaitAll(tasks);
 Console.WriteLine("Done");

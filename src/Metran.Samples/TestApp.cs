@@ -2,7 +2,7 @@
 
 public static class TestApp
 {
-  public static void Run() {
+  public static async Task RunAsync() {
     var guid = Guid.NewGuid();
     var idList = new List<long>() {
       new Random().Next(1, 10),
@@ -11,14 +11,17 @@ public static class TestApp
       new Random().Next(1, 10)
     };
     Thread.Sleep( new Random().Next(100, 500)); 
-    using var metran = TestMetranContainer.Container.ForceAddTransactionList(idList.ToHashSet());
+    var exists = TestMetranContainer.Container.TryAddTransactionList(idList.ToHashSet(), out var transactionList);
 
-    if (metran == null) {
-      // Console.WriteLine($"[{guid}]Transaction already exists");
-      return;
+    if (exists) {
+      var waitResult = await transactionList.SafeWaitAllAsync();
+      if (!waitResult) {
+        Console.WriteLine($"[{guid}] wait failed");
+        return;
+      }
     }
+  
     if(new Random().Next(1000, 5000) % 2 == 0) {
-      // Console.WriteLine($"[{guid}] random error");
       return;
     }
     /*
