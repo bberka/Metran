@@ -32,8 +32,8 @@ Use the `MetranContainer` within your methods to manage transactions. When the `
 ```csharp
 public void DoSomething(long userId)
 {
-  // ForceAddTransaction: Attempts to add a transaction. If an identical
-  // transactionIdentity already exists, it will throw an exception.
+  // ForceAddTransaction: Creates and adds a new transaction.
+  // If an identical transactionIdentity already exists, it will overwrite the existing one.
   using var metran = Container.ForceAddTransaction(userId); 
 
   // Do your business logic here.
@@ -43,9 +43,9 @@ public void DoSomething(long userId)
 
 **Alternative Transaction Creation Methods:**
 
-- **`ThrowOrAddTransaction(T transactionIdentity)`:** Throws an `Exception` if the transaction already exists.
-- **`GetOrAddTransaction(T transactionIdentity)`:** Returns the existing transaction if found, otherwise adds and returns a new one. This method is idempotent.
-- **`TryAddTransaction(T transactionIdentity, out MetranTransaction<T> transaction)`:** Attempts to add a transaction. Returns `true` if successful and sets `transaction`, `false` otherwise. This method is non-blocking.
+- **`ThrowOrAddTransaction(T transactionIdentity)`:** Attempts to add a new transaction. Throws an `Exception` if a transaction with the identical `transactionIdentity` already exists. This method ensures uniqueness.
+- **`GetOrAddTransaction(T transactionIdentity)`:** Returns the existing transaction if found. If no transaction with the given `transactionIdentity` exists, it adds and returns a new one. This method is idempotent.
+- **`TryAddTransaction(T transactionIdentity, out MetranTransaction<T> transaction)`:** Attempts to add a transaction. Returns `true` if successful (i.e., the transaction was added because it didn't exist) and sets `transaction`, `false` otherwise (if a transaction with the same ID already exists). This method is non-blocking and safe for concurrent attempts to add.
 
 ### 3. Transaction Usage with a List of IDs
 
@@ -57,6 +57,7 @@ public void DoSomethingWithMultipleUsers(List<long> userIds)
   // ForceAddTransactionList: Attempts to add transactions for all provided IDs.
   // If ANY of the IDs in the HashSet already exist as active transactions,
   // it will throw an exception, and none of the transactions will be added.
+  // This method ensures atomicity: either all transactions are added, or none are.
   using var metranList = Container.ForceAddTransactionList(userIds.ToHashSet()); 
 
   // Do your business logic here.
@@ -66,7 +67,7 @@ public void DoSomethingWithMultipleUsers(List<long> userIds)
 
 **Alternative Transaction List Creation Method:**
 
-- **`TryAddTransactionList(HashSet<T> transactionIdentityList, out MetranTransactionList<T> transactionList)`:** Attempts to add transactions for all provided IDs. Returns `true` if all are successfully added and sets `transactionList`, `false` otherwise (if even one ID already exists). If `false` is returned, no transactions are added, and any partially added transactions are automatically disposed.
+- **`TryAddTransactionList(HashSet<T> transactionIdentityList, out MetranTransactionList<T> transactionList)`:** Attempts to add transactions for all provided IDs. Returns `true` if all are successfully added (meaning none of them existed previously) and sets `transactionList`. Returns `false` otherwise (if even one ID already exists). If `false` is returned, no transactions are ultimately held, and any partially added transactions are automatically disposed to maintain atomicity.
 
 ### 4. Waiting for Transactions to Complete
 
@@ -78,32 +79,36 @@ Metran provides asynchronous waiting capabilities for individual transactions an
 public async Task WaitForUserOperation(long userId)
 {
     MetranTransaction<long> transaction;
-    // Attempt to get an existing transaction, or add a new one if it doesn't exist.
-    // You might use TryAddTransaction or GetOrAddTransaction based on your logic.
+    // Attempt to add a transaction if it doesn't exist.
+    // If it already exists, 'TryAddTransaction' will return false,
+    // and we can then choose to wait for the existing one.
     if (Container.TryAddTransaction(userId, out transaction))
     {
         // This transaction was just added, meaning no one else is currently processing for this user.
         // Perform your operation, then dispose the transaction.
         using (transaction)
         {
-            // Do some work...
+            Console.WriteLine($"Starting operation for user {userId}...");
+            await Task.Delay(2000); // Simulate work
+            Console.WriteLine($"Operation for user {userId} completed.");
         }
     }
     else
     {
         // A transaction for this userId already exists, meaning another operation is ongoing.
         // Get the existing transaction to wait for it.
-        transaction = Container.GetOrAddTransaction(userId); // Get the existing one
+        transaction = Container.GetOrAddTransaction(userId); // Get the existing one (it won't add here)
         try
         {
+            Console.WriteLine($"User {userId} is busy. Waiting for existing operation to complete...");
             // Wait for the existing transaction to complete (be disposed).
             // This will throw a TimeoutException if it doesn't complete within 10 seconds.
             await transaction.WaitAsync(); 
-            Console.WriteLine($"Transaction for user {userId} completed.");
+            Console.WriteLine($"Existing operation for user {userId} completed. You can now proceed.");
         }
         catch (TimeoutException ex)
         {
-            Console.WriteLine($"Waiting for transaction for user {userId} timed out: {ex.Message}");
+            Console.WriteLine($"Waiting for operation for user {userId} timed out: {ex.Message}");
         }
     }
 }
@@ -117,35 +122,35 @@ public async Task WaitForUserOperation(long userId)
 
 #### Waiting for a List of Transactions
 
+When dealing with `MetranTransactionList`, the typical pattern is to acquire all locks atomically using `TryAddTransactionList` or `ForceAddTransactionList`. If `TryAddTransactionList` fails, it means one or more transactions are already active, and you generally wouldn't *wait* for an arbitrarily overlapping set of transactions. Instead, you'd likely handle the failure (e.g., return an error, retry after a delay).
+
+The `WaitAllAsync` and `SafeWaitAllAsync` methods for `MetranTransactionList` are primarily intended to be used *after* you have successfully acquired all locks (e.g., within the `using` block of a `MetranTransactionList`) to wait for a *subset* of those transactions to complete, or if you passed a list of IDs for which you *know* transactions should be active and want to wait for them to finish.
+
+However, a more common scenario for waiting for a list of transactions to *become available* might involve a retry loop using `TryAddTransactionList`.
+
 ```csharp
-public async Task WaitForMultipleUserOperations(List<long> userIds)
+public async Task TryAcquireAndProcessMultipleUsers(List<long> userIds)
 {
+    var idsToProcess = userIds.ToHashSet();
     MetranTransactionList<long> transactionList;
 
-    if (Container.TryAddTransactionList(userIds.ToHashSet(), out transactionList))
+    if (Container.TryAddTransactionList(idsToProcess, out transactionList))
     {
-        // All transactions were just added. Perform your operations.
+        // All transactions were successfully added. Process them.
         using (transactionList)
         {
-            // Do some work...
+            Console.WriteLine($"Acquired locks for users: {string.Join(", ", userIds)}. Processing...");
+            await Task.Delay(3000); // Simulate work
+            Console.WriteLine($"Finished processing for users: {string.Join(", ", userIds)}. Releasing locks.");
         }
     }
     else
     {
-        // One or more transactions already existed.
-        // You would typically handle this by deciding if you want to wait for the existing ones,
-        // or return an error indicating concurrent access.
-        // For demonstration, let's assume you want to wait for them to finish.
-        // Note: You would need to retrieve the individual transactions or handle the case
-        // where you couldn't acquire all locks in the first place.
-        // The most common pattern is to either succeed in acquiring all locks or fail immediately.
-        // If you need to wait for existing locks, you'd likely use individual `SafeWaitAsync` calls
-        // or re-attempt the `TryAddTransactionList` after a delay.
-
-        Console.WriteLine("One or more transactions for the given user IDs already exist.");
-        // Example: If you *must* wait for them even if you couldn't acquire them all initially,
-        // you would need to implement a retry logic or individual waits.
-        // The current design of ForceAdd/TryAdd focuses on acquiring all locks or none.
+        Console.WriteLine($"Could not acquire all locks for users: {string.Join(", ", userIds)}. Some users are busy.");
+        // At this point, you might inform the user, log, or implement a retry mechanism.
+        // For example, if you wanted to wait for the *specific* IDs that were busy,
+        // you would need to iterate through them and call individual `SafeWaitAsync` on each.
+        // Or, if this operation is critical, you might retry `TryAddTransactionList` after a delay.
     }
 }
 ```
@@ -163,10 +168,10 @@ public async Task WaitForMultipleUserOperations(List<long> userIds)
 ## v2.1
 
 - **Added asynchronous waiting capabilities:**
-    - `MetranTransaction<T>.WaitAsync()`: Waits for a single transaction to complete, throwing a `TimeoutException` on timeout.
-    - `MetranTransaction<T>.SafeWaitAsync()`: Waits for a single transaction to complete, returning `false` on timeout instead of throwing an exception.
-    - `MetranTransactionList<T>.WaitAllAsync()`: Waits for all transactions in the list to complete, throwing a `TimeoutException` on timeout.
-    - `MetranTransactionList<T>.SafeWaitAllAsync()`: Waits for all transactions in the list to complete, returning `false` on timeout instead of throwing an exception.
+  - `MetranTransaction<T>.WaitAsync()`: Waits for a single transaction to complete, throwing a `TimeoutException` on timeout.
+  - `MetranTransaction<T>.SafeWaitAsync()`: Waits for a single transaction to complete, returning `false` on timeout instead of throwing an exception.
+  - `MetranTransactionList<T>.WaitAllAsync()`: Waits for all transactions in the list to complete, throwing a `TimeoutException` on timeout.
+  - `MetranTransactionList<T>.SafeWaitAllAsync()`: Waits for all transactions in the list to complete, returning `false` on timeout instead of throwing an exception.
 - **Improved `MetranTransactionList` performance and consistency:** Now uses `HashSet<MetranTransaction<T>>` internally for storing the list of transactions, providing efficient lookups and set operations.
 
 ## v2.0
