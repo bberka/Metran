@@ -54,7 +54,7 @@ namespace Metran
 
     public bool TryAddTransactionList(HashSet<T> transactionIdentityList, out MetranTransactionList<T> transactionList) {
       transactionList = null;
-      var addedList = new List<MetranTransaction<T>>();
+      var addedList = new HashSet<MetranTransaction<T>>();
       foreach (var id in transactionIdentityList) {
         var added = TryAddTransaction(id, out var transaction);
         if (added) {
@@ -75,7 +75,7 @@ namespace Metran
     }
 
     public MetranTransactionList<T> ForceAddTransactionList(HashSet<T> transactionIdentityList) {
-      var addedList = new List<MetranTransaction<T>>();
+      var addedList = new HashSet<MetranTransaction<T>>();
       foreach (var id in transactionIdentityList) {
         var added = TryAddTransaction(id, out var transaction);
         if (added) {
